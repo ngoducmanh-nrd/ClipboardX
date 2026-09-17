@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClipboardX</title>
+    <!-- Nhúng thư viện icon -->
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Khu vực Titlebar (Có thể kéo thả cửa sổ) -->
+        <header class="titlebar">
+            <div class="logo">
+                <i class='bx bx-paste text-blue icon-lg'></i>
+                <span class="logo-text">ClipboardX</span> 
+                <span class="version">v1</span>
+            </div>
+            <div class="search-container">
+                <i class='bx bx-search'></i>
+                <input type="text" id="search-input" placeholder="Search clipboard...">
+                <span class="shortcut">Ctrl + F</span>
+            </div>
+            <div class="window-controls">
+                <i class='bx bx-moon' id="dark-mode-toggle" title="Toggle Dark Mode"></i>
+                <i class='bx bx-minus'></i>
+                <i class='bx bx-square'></i>
+                <i class='bx bx-x'></i>
+            </div>
+        </header>
+
+        <!-- Main Layout (3 cột) -->
+        <div class="main-content">
+            
+            <!-- Cột 1: Sidebar Trái -->
+            <aside class="sidebar-left">
+                <div class="menu-section">
+                    <h3 class="section-title">WORKSPACE</h3>
+                    <ul class="menu-list" id="workspace-menu">
+                        <li class="menu-item active" data-workspace="All">
+                            <i class='bx bx-grid-alt'></i> All Workspaces <span class="badge blue" id="badge-ws-all">0</span>
+                        </li>
+                        <li class="menu-item" data-workspace="Programming">
+                            <i class='bx bx-code-alt'></i> Programming <span class="badge" id="badge-programming">0</span>
+                        </li>
+                        <li class="menu-item" data-workspace="Study">
+                            <i class='bx bx-book-open'></i> Study <span class="badge" id="badge-study">0</span>
+                        </li>
+                        <li class="menu-item" data-workspace="Personal">
+                            <i class='bx bx-user'></i> Personal 
+                            <span class="workspace-lock-wrapper" style="margin-left: 6px; display: inline-flex; gap: 4px; align-items: center;">
+                                <i class='bx bx-lock-alt' id="personal-lock-icon" title="Lock/Unlock Workspace"></i>
+                                <i class='bx bx-key' id="personal-change-pin-icon" title="Change PIN" style="display: none; cursor: pointer; color: var(--yellow);"></i>
+                            </span>
+                            <span class="badge" id="badge-personal">0</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="menu-section">
+                    <h3 class="section-title">QUICK ACTION</h3>
+                    <ul class="menu-list" id="filter-menu">
+                        <!-- Thêm data-filter để làm chức năng lọc -->
+                        <li class="menu-item active" data-filter="All Items">
+                            <i class='bx bx-list-ul'></i> All Items <span class="badge plain" id="badge-all">0</span>
+                        </li>
+                        <li class="menu-item" data-filter="Favorites">
+                            <i class='bx bx-star text-yellow'></i> Favorites <span class="badge plain" id="badge-fav">0</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="menu-section">
+                    <h3 class="section-title">TYPES</h3>
+                    <ul class="menu-list" id="type-menu">
+                        <li class="menu-item" data-filter="Text"><i class='bx bx-text'></i> Text <span class="badge plain" id="badge-text">0</span></li>
+                        <li class="menu-item" data-filter="Code"><i class='bx bx-code'></i> Code <span class="badge plain" id="badge-code">0</span></li>
+                        <li class="menu-item" data-filter="Link"><i class='bx bx-link'></i> Link <span class="badge plain" id="badge-link">0</span></li>
+                        <li class="menu-item" data-filter="Email"><i class='bx bx-envelope'></i> Email <span class="badge plain" id="badge-email">0</span></li>
+                        <li class="menu-item" data-filter="Path"><i class='bx bx-folder'></i> Path <span class="badge plain" id="badge-path">0</span></li>
+                        <li class="menu-item" data-filter="Image"><i class='bx bx-image'></i> Image <span class="badge plain" id="badge-image">0</span></li>
+                </div>
+
+                <div class="menu-section settings-section">
+                    <h3 class="section-title">SETTINGS</h3>
+                    <ul class="menu-list">
+                        <li class="setting-item">
+                            <label class="setting-label">
+                                <i class='bx bxl-windows'></i>
+                                <span>Start with Windows</span>
+                                <input type="checkbox" id="autostart-toggle" class="setting-checkbox">
+                            </label>
+                        </li>
+                    </ul>
+                </div>
+
+                <button class="btn-clear">
+                    <i class='bx bx-trash'></i> Clear All
+                </button>
+            </aside>
+
+            <!-- Cột 2: Danh sách Clipboard (Timeline) -->
+            <main class="timeline-area">
+                <div class="tabs">
+                    <div class="tab active">Timeline</div>
+                    <div class="tab">Favorites</div>
+                </div>
+
+                <div class="timeline-content">
+                        <div class="date-header" id="current-date">Today</div>
+
+                        <div class="timeline-list" id="clipboard-list"></div>
+                </div>
+            </main>
+
+            <!-- Cột 3: Sidebar Phải (Chi tiết) -->
+            <aside class="sidebar-right">
+                
+                <!-- Trạng thái chưa chọn gì -->
+                <div id="empty-view" style="text-align: center; color: var(--text-muted); margin-top: 80px;">
+                    <i class='bx bx-pointer' style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
+                    <p>Chọn một mục để xem chi tiết</p>
+                </div>
+
+                <!-- Trạng thái đã chọn (Mặc định ẩn) -->
+                <div id="detail-view" style="display: none;">
+                    <div class="detail-preview">
+                        <i class='bx bx-star star-icon' id="detail-star" style="cursor: pointer;"></i>
+                        <div class="big-icon-box" id="detail-icon-bg">
+                            <i class='bx bx-globe' id="detail-icon"></i>
+                        </div>
+                        <h2 class="detail-header-title">Clipboard Content</h2>
+                        <span class="badge blue center-badge" id="detail-badge-top">Type</span>
+                    </div>
+
+                    <!-- Scrollable text/code block container -->
+                    <div class="detail-content-wrapper">
+                        <div class="detail-content-header">
+                            <span class="content-header-title">Content Preview</span>
+                            <button class="btn-copy-mini" id="btn-copy-mini" title="Copy Content">
+                                <i class='bx bx-copy'></i>
+                            </button>
+                        </div>
+                        <div class="detail-code-container">
+                            <pre id="detail-title" class="detail-code-block"></pre>
+                        </div>
+                    </div>
+
+                    <!-- Image preview container -->
+                    <div class="detail-image-wrapper" id="detail-image-wrapper" style="display: none; margin-bottom: 20px; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; max-height: 250px; background: var(--bg-main); text-align: center;">
+                        <img id="detail-image-view" style="max-width: 100%; max-height: 250px; object-fit: contain; padding: 10px;">
+                    </div>
+
+                    <div class="detail-info">
+                        <p class="label">Copied at</p>
+                        <p class="value" id="detail-time">00:00 - 01/01/2026</p>
+
+                        <p class="label">Workspace</p>
+                        <div class="workspace-select-wrapper">
+                            <select id="detail-workspace-select" class="workspace-select">
+                                <option value="Programming">Programming</option>
+                                <option value="Study">Study</option>
+                                <option value="Personal">Personal</option>
+                            </select>
+                        </div>
+
+                        <p class="label">Type</p>
+                        <span class="badge blue-light" id="detail-type-text">Type</span>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" id="btn-save-image" style="display: none;">
+                            <i class='bx bx-download'></i> Save Image
+                        </button>
+                        <button class="btn btn-primary" id="btn-open-browser" style="display: none;">
+                            <i class='bx bx-link-external'></i> Open in Browser
+                        </button>
+                        <button class="btn btn-outline" id="btn-copy-again">
+                            <i class='bx bx-copy'></i> Copy Again
+                        </button>
+                        <button class="btn btn-outline" id="btn-edit">
+                            <i class='bx bx-edit-alt'></i> Edit
+                        </button>
+                        <button class="btn btn-danger" id="btn-delete-detail">
+                            <i class='bx bx-trash'></i> Delete
+                        </button>
+                    </div>
+                </div>
+            </aside>
+
+        </div>
+    </div>
+    
+    <!-- Modal Nhập PIN để mở khóa -->
+    <div class="modal-overlay" id="pin-lock-modal" style="display: none;">
+        <div class="pin-modal-content">
+            <h3><i class='bx bx-lock-alt'></i> Unlock Workspace</h3>
+            <p>Please enter your 4-digit PIN to access Personal Workspace.</p>
+            <div class="pin-display" id="pin-display-lock">
+                <span class="pin-dot"></span>
+                <span class="pin-dot"></span>
+                <span class="pin-dot"></span>
+                <span class="pin-dot"></span>
+            </div>
+            <div class="pin-keypad" id="pin-keypad-lock">
+                <button class="keypad-btn" data-key="1">1</button>
+                <button class="keypad-btn" data-key="2">2</button>
+                <button class="keypad-btn" data-key="3">3</button>
+                <button class="keypad-btn" data-key="4">4</button>
+                <button class="keypad-btn" data-key="5">5</button>
+                <button class="keypad-btn" data-key="6">6</button>
+                <button class="keypad-btn" data-key="7">7</button>
+                <button class="keypad-btn" data-key="8">8</button>
+                <button class="keypad-btn" data-key="9">9</button>
+                <button class="keypad-btn btn-action" data-action="clear">C</button>
+                <button class="keypad-btn" data-key="0">0</button>
+                <button class="keypad-btn btn-action" data-action="cancel">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Đổi PIN -->
+    <div class="modal-overlay" id="change-pin-modal" style="display: none;">
+        <div class="pin-modal-content">
+            <h3><i class='bx bx-key'></i> Change PIN</h3>
+            <p id="change-pin-step-label">Enter current 4-digit PIN:</p>
+            <div class="pin-display" id="pin-display-change">
+                <span class="pin-dot"></span>
+                <span class="pin-dot"></span>
+                <span class="pin-dot"></span>
+                <span class="pin-dot"></span>
+            </div>
+            <div class="pin-keypad" id="pin-keypad-change">
+                <button class="keypad-btn" data-key="1">1</button>
+                <button class="keypad-btn" data-key="2">2</button>
+                <button class="keypad-btn" data-key="3">3</button>
+                <button class="keypad-btn" data-key="4">4</button>
+                <button class="keypad-btn" data-key="5">5</button>
+                <button class="keypad-btn" data-key="6">6</button>
+                <button class="keypad-btn" data-key="7">7</button>
+                <button class="keypad-btn" data-key="8">8</button>
+                <button class="keypad-btn" data-key="9">9</button>
+                <button class="keypad-btn btn-action" data-action="clear">C</button>
+                <button class="keypad-btn" data-key="0">0</button>
+                <button class="keypad-btn btn-action" data-action="cancel">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast notification container -->
+    <div id="toast-container" class="toast-container"></div>
+    <script src="renderer.js"></script>
+</body>
+</html>
